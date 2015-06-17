@@ -1,0 +1,14 @@
+{
+	"name": "EtherSwitch",
+	"typeId": "TypeId",
+	"description": "Ethernet Switch Model",
+	"version": "1.0.0",
+	"settings": {
+		"validate_firmware": "true",
+		"connection_mode": "always",
+		"reconnection_delay": "5",
+                "refresh_period" : "10",
+                "refresh_behavior" : "InitModel"
+	},
+	"files": ["FlowModel.js", "SwitchModel.js", "VlanModel.js"]
+}

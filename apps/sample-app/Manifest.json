@@ -1,0 +1,31 @@
+{
+	"apptype": "application",
+	"info": {
+		"name": "sample-app",
+		"version": "1.0.0.BUILD",
+		"summary": "Sample Application",
+		"description": "TODO description",
+		"homepage": "https://www.inocybe.com",
+		"license": "Apache Software License",
+		"authors": [
+			{
+				"name": "Mathieu Lemay",
+				"email": "mlemay@inocybe.com"
+			}
+		]
+	},
+	"capabilities": [
+     {
+			"subject": "endpoint",
+			"verb": "allow",
+			"target": "endpoint",         
+		},
+		
+     {
+			"subject": "endpoint",
+			"verb": "deny",
+			"target": "endpoint"
+		}
+	]
+}
+
