@@ -1,0 +1,14 @@
+{
+ "name": "SampleEngine",
+ "description": "A sample engine used to make sure the types are created properly",
+ "version": "1.0.0",
+ "globalSettings": [
+    {"validate_firmware" : "true"},
+    {"connection_mode":"always"},
+    {"reconnection_delay":"5"}
+ ],
+ "modules":[
+    {"name" : "dummyModule", "settingsFile" : "moduleSettings.json" },
+    {"name" : "dummyModule", "settings" : [{"dummyParam": "1" }]}
+ ]
+}

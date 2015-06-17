@@ -1,0 +1,216 @@
+import sbt._
+import Keys._
+import com.typesafe.sbtmultijvm.MultiJvmPlugin
+import MultiJvmPlugin.{ MultiJvm, extraOptions, jvmOptions, scalatestOptions }
+import com.typesafe.sbtscalariform._
+import com.typesafe.sbtscalariform.ScalariformPlugin._
+import java.lang.Boolean.getBoolean
+import akka.sbt.AkkaKernelPlugin
+import akka.sbt.AkkaKernelPlugin.{ Dist, distMainClass, outputDirectory, distJvmOptions }
+import com.github.retronym.SbtOneJar
+
+object IaaSBuild extends Build {
+  System.setProperty("akka.mode", "test") // Is there better place for this?
+
+  lazy val buildSettings = Seq(
+    organization := "com.iaasframework",
+    version := "2.0.0-SNAPSHOT",
+    scalaVersion := "2.9.1")
+
+  lazy val iaas = Project(
+    id = "iaas",
+    base = file("."),
+    settings = parentSettings ++ AkkaKernelPlugin.distSettings ++ rstdocSettings ++ Seq(
+      resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
+      resolvers += "Inocybe Repo" at "http://repository.inocybe.ca/content/repositories/iaas/",
+      resolvers += "Spray Repo" at "http://repo.spray.cc/",
+      
+      parallelExecution in GlobalScope := false,
+      distJvmOptions in Dist := "-Xms256M -Xmx1024M",
+      distMainClass in Dist := "com.iaasframework.kernel.Main",
+      outputDirectory in Dist := file("target/iaas"),
+      //  Unidoc.unidocExclude := Seq(samples.id, tutorials.id),
+      AkkaKernelPlugin.configSourceDirs in AkkaKernelPlugin.Dist := Seq(file("src/main/resources/config")),
+      mainClass in (Compile,run) := Some("com.iaasframework.kernel.Main"),
+      rstdocDirectory <<= baseDirectory / "docs",
+      libraryDependencies ++= Dependency.all),
+    aggregate = Seq(iaas_kernel,iaas_engines,iaas_transports,iaas_modules,iaas_devkit,iaas_datastores,iaas_client) //aggregate = Seq(actor, testkit, actorTests, stm, http, slf4j, cluster, mailboxes, samples, tutorials)
+    ) dependsOn (iaas_kernel,iaas_api,iaas_engines,iaas_transports,iaas_modules,iaas_devkit,iaas_datastores, iaas_client)
+
+  lazy val iaas_kernel = Project(
+    id = "iaas-kernel",
+    base = file("main/kernel"),
+    settings = defaultSettings ++ Seq(libraryDependencies ++= Dependency.base ))
+  
+    lazy val iaas_engines = Project(
+    id = "iaas-engines",
+    base = file("main/engines"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base)) dependsOn (iaas_kernel,iaas_datastores)
+
+    lazy val iaas_modules = Project(
+    id = "iaas-modules",
+    base = file("main/modules"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base ++ Seq(Dependency.commons_net))) dependsOn (iaas_engines, iaas_transports)
+   
+    lazy val iaas_transports = Project(
+    id = "iaas-transports",
+    base = file("main/transports"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base ++ Seq(Dependency.commons_net,Dependency.jcraft_jsch)))
+     
+    lazy val iaas_client = Project(
+    id = "iaas-client",
+    base = file("main/client"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base ++ Seq(Dependency.argot,Dependency.spray_base,Dependency.spray_can,Dependency.spray_client,Dependency.spray_json)))
+ 
+    lazy val iaas_api = Project(
+    id = "iaas-api",
+    base = file("main/api"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base ++ Seq(Dependency.spray_can,Dependency.spray_server))) dependsOn (iaas_kernel)
+
+    lazy val iaas_datastores = Project(
+    id = "iaas-datastores",
+    base = file("main/datastores"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base ++ Seq(Dependency.lightcouch))) dependsOn (iaas_kernel)
+   
+    lazy val iaas_devkit = Project(
+    id = "iaas-devkit",
+    base = file("main/devkit"),
+    settings = defaultSettings ++ Seq(
+    libraryDependencies ++= Dependency.base)) dependsOn (iaas_kernel,iaas_engines,iaas_modules) 
+  
+  override lazy val settings = super.settings ++ buildSettings ++ Publish.versionSettings
+
+  lazy val baseSettings = Defaults.defaultSettings ++ Publish.settings
+
+  lazy val parentSettings = Defaults.defaultSettings ++ Seq(
+    publishArtifact in Compile := false)
+
+  val testExcludes = SettingKey[Seq[String]]("test-excludes")
+
+  def akkaTestExcludes: Seq[String] = {
+		  val exclude = System.getProperty("akka.test.exclude", "")
+    if (exclude.isEmpty) Seq.empty else exclude.split(",").toSeq
+  }
+  
+  val demo = InputKey[Unit]("demo","This is a demo description")
+ 
+  lazy val defaultSettings = baseSettings ++ scalariformSettings ++ Seq(
+    resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
+    resolvers += "Twitter Public Repo" at "http://maven.twttr.com", // This will be going away with com.mongodb.async's next release
+    resolvers += "Inocybe Repo" at "http://repository.inocybe.ca/content/repositories/iaas/",
+    resolvers += "Spray Repo" at "http://repo.spray.cc/",
+    exportJars := true,
+
+    // compile options
+    scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked") ++ (
+      if (true || (System getProperty "java.runtime.version" startsWith "1.7")) Seq() else Seq("-optimize")), // -optimize fails with jdk7
+    javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
+
+    // add config dir to classpaths
+    //unmanagedClasspath in Runtime <+= (baseDirectory in LocalProject("iaas")) map { base => Attributed.blank(base / "config") },
+    //unmanagedClasspath in Test <+= (baseDirectory in LocalProject("iaas")) map { base => Attributed.blank(base / "config") },
+
+    // disable parallel tests
+    parallelExecution in Test := false,
+
+    // for excluding tests in jenkins builds (-Dakka.test.exclude=TimingSpec)
+    testExcludes := akkaTestExcludes,
+    testOptions in Test <++= testExcludes map { _.map(exclude => Tests.Filter(test => !test.contains(exclude))) },
+
+    // show full stack traces
+    testOptions in Test += Tests.Argument("-oF"))
+
+  import scalariform.formatter.preferences._
+  ScalariformKeys.preferences :=
+    FormattingPreferences()
+    .setPreference(RewriteArrowSymbols, true)
+    .setPreference(AlignParameters, true)
+    .setPreference(AlignSingleLineCaseStatements, true)
+
+  // reStructuredText docs
+
+  val rstdocDirectory = SettingKey[File]("rstdoc-directory")
+  val rstdoc = TaskKey[File]("rstdoc", "Build the reStructuredText documentation.")
+
+  lazy val rstdocSettings = Seq(rstdoc <<= rstdocTask)
+
+  def rstdocTask = (rstdocDirectory, streams) map {
+    (dir, s) =>
+      {
+        s.log.info("Building reStructuredText documentation...")
+        val exitCode = Process(List("make", "clean", "html", "pdf"), dir) ! s.log
+        if (exitCode != 0) sys.error("Failed to build docs.")
+        s.log.info("Done building docs.")
+        dir
+      }
+  }
+}
+// Dependencies
+
+object Dependency {
+
+  // Versions
+
+  object V {
+    val Akka = "2.0.1"
+    val Argot = "0.3.8"
+    val Rhino = "1.7R3"
+    val SCouchDB = "0.7"
+    val Logback = "1.0.0"
+    val Jersey = "1.3"
+    val Jetty = "7.4.0.v20110414"
+    val JSch = "0.1.45"
+    val LightCouch = "0.0.4"
+    val Scalatest = "1.6.1"
+    val Spray = "1.0-M1"
+    val SprayJSON = "1.1.1"
+    val CommonsCLI = "1.2"
+    val CommonsNet = "3.0.1"
+  }
+
+  object Provided {
+    val javaxServlet = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0" % "provided" // CDDL v1
+    val jerseyServer = "com.sun.jersey" % "jersey-server" % V.Jersey % "provided" // CDDL v1
+    val jetty = "org.eclipse.jetty" % "jetty-server" % V.Jetty % "provided" // Eclipse license
+  }
+
+  object Test {
+    val junit = "junit" % "junit" % "4.5" % "test" // Common Public License 1.0
+    val logback = "ch.qos.logback" % "logback-classic" % V.Logback % "test" // EPL 1.0 / LGPL 2.1
+    val mockito = "org.mockito" % "mockito-all" % "1.8.1" % "test" // MIT
+    val scalatest = "org.scalatest" %% "scalatest" % V.Scalatest % "test" // ApacheV2
+    val scalacheck = "org.scala-tools.testing" %% "scalacheck" % "1.9" % "test" // New BSD
+    val akka_testkit = "com.typesafe.akka" % "akka-testkit" % V.Akka % "test"
+  }
+
+  // Compile
+  val akka_kernel = "com.typesafe.akka" % "akka-kernel" % V.Akka
+  val akka_actor = "com.typesafe.akka" % "akka-actor" % V.Akka
+  val akka_slf4j = "com.typesafe.akka" % "akka-slf4j" % V.Akka
+  val argot = "org.clapper" %% "argot" % V.Argot
+  val lightcouch = "org.lightcouch" % "lightcouch" % V.LightCouch
+  val jcraft_jsch = "com.jcraft" % "jsch" % V.JSch
+  val logback = "ch.qos.logback" % "logback-classic" % V.Logback % "runtime"
+  val rhino = "org.mozilla" % "rhino" % V.Rhino
+  val couchdb = "scouch.db" %% "scouchdb" % V.SCouchDB
+  val redis = "net.debasishg" %% "redisclient" % "2.4.0"
+  val spray_can = "cc.spray" % "spray-can" % V.Spray
+  val spray_server = "cc.spray" % "spray-server" % V.Spray
+  val spray_base = "cc.spray" % "spray-base" % V.Spray
+//  val spray_util = "cc.spray" % "spray-util" % V.Spray
+  val spray_client = "cc.spray" % "spray-client" % V.Spray
+  val spray_json = "cc.spray" %% "spray-json" % V.SprayJSON
+  val commons_net = "commons-net" % "commons-net" % V.CommonsNet
+  val commons_cli = "commons-cli" % "commons-cli" % V.CommonsCLI
+  // val scwilio = "org.scwilio" %% "scwilio-core" % "0.1.1-SNAPSHOT"
+  //val http = Seq(play_mini, Provided.javaxServlet, Provided.jetty, Provided.jerseyServer)
+  val base = Seq(akka_actor, akka_slf4j, akka_kernel, rhino, couchdb, redis, Test.junit, Test.scalatest, Test.logback, Test.akka_testkit)
+  val all = Seq(akka_kernel, logback) ++ base
+
+}
