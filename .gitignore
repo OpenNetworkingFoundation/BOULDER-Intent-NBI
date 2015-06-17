@@ -1,0 +1,53 @@
+#########################################################################
+# .gitignore file for NIC
+
+# Temp files
+.metadata
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+.settings
+MANIFEST.MF
+*~
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Java/Maven files
+.project
+.settings
+.classpath
+target/
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# lib files from maven
+/lib/
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# Misc
+.DS_Store
+
+# Yang generated files
+**/src/main/yang-gen-config/
+**/src/main/yang-gen-sal/
+>>>>>>> initial.pom
+
+# static analysis files
+.checkstyle
+.pmd
+.pmdruleset.xml
