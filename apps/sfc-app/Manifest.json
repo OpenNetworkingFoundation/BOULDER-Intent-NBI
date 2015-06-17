@@ -1,9 +1,9 @@
 {
 	"apptype": "application",
 	"info": {
-		"name": "sfc-app",
+		"name": "sample-app",
 		"version": "1.0.0.BUILD",
-		"summary": "SFC Sample Application",
+		"summary": "Sample Application",
 		"description": "TODO description",
 		"homepage": "https://www.inocybe.com",
 		"license": "Apache Software License",

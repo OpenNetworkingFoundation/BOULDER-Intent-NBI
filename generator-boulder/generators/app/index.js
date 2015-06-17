@@ -15,7 +15,7 @@ module.exports = yeoman.generators.Base.extend({
     var prompts = [{
       type: 'confirm',
       name: 'someOption',
-      message: 'Would you like to enable this option?',
+      message: 'Will application expose additional intents?',
       default: true
     }];
 
@@ -30,9 +30,20 @@ module.exports = yeoman.generators.Base.extend({
   writing: {
     app: function () {
       this.fs.copy(
-        this.templatePath('_package.json'),
-        this.destinationPath('package.json')
+        this.templatePath('_Manifest.json'),
+        this.destinationPath('Manifest.json')
       );
+
+      this.fs.copy(
+        this.templatePath('intents/_App.js'),
+        this.destinationPath('intents/App.js')
+      );
+
+      this.fs.copy(
+        this.templatePath('scriptlets/_Scriptlet.js'),
+        this.destinationPath('scriptlets/Scriptlet.js')
+      );
+
       this.fs.copy(
         this.templatePath('_bower.json'),
         this.destinationPath('bower.json')
@@ -52,6 +63,6 @@ module.exports = yeoman.generators.Base.extend({
   },
 
   install: function () {
-    this.installDependencies();
+    //this.installDependencies();
   }
 });
