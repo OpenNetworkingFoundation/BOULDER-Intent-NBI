@@ -34,18 +34,29 @@
         <h1>
 <a id="welcome-to-the-boulder-project-an-intent-based-nbi-project" class="anchor" href="#welcome-to-the-boulder-project-an-intent-based-nbi-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome to the Boulder Project, an Intent-based NBI Project</h1>
 
-<p>The Open Intent NBI is a northbound project that provides a scriptable runtime that maps to Intent structures that allows users to create portable applications across different underlying controllers.</p>
-
-<p>(WORK IN PROGRESS) - We apologize for the lack of documentation following the proof of concept proper documentation will be provided to explain how to run and work with Boulder.</p>
-
 <h1>
-<a id="compiling-and-building" class="anchor" href="#compiling-and-building" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compiling and Building</h1>
+<a id="questions-about-boulder" class="anchor" href="#questions-about-boulder" aria-hidden="true"><span class="octicon octicon-link"></span></a>Questions About Boulder</h1>
 
-<p>You can build this project from SBT or Maven.</p>
+<p><strong>What is Boulder?</strong>
+Boulder is an ONF sponsored project under the OpenSourceSDN umbrella for Intent-based Northbounds of SDN controllers. It focuses on semantics and information models to enable applications to tell networks what to do and not how to do it.</p>
 
-<p>sbt install / mvn install will provide you with compiled binary.</p>
+<p><strong>What is it designed to do?</strong>
+Boulder was designed to provide Intent portability across different controller environments. It provides a layer which shields application developers from any API changes or northbound evolution. Moreover it provides both a declarative or imperative approach for writing applications through its scripting environment.</p>
 
-<p>The Boulder Project is OpenSource and available under the Apache 2 License.</p>
+<p><strong>Does Boulder solve an issue faced by the industry? If so, what is the issue and how will Boulder help?</strong>
+Boulder is trying to solve application portability, as well as SDN application co-existence. In a similar fashion that virtual machine images are portable compute units, boulder will aim at providing a seamless experience across multiple execution environments when working with SDN controllers.</p>
+
+<p><strong>Does Boulder leverage ODL or any other SDN organization’s work? If so, who?</strong>
+Boulder works closely with the OpenDaylight NIC projects which provides a native implementation of the Information Model and therefore a nicer integration and a set if richer features.</p>
+
+<p><strong>Where any companies deeply involved in the development of Boulder?</strong>
+It has been mainly Inocybe and HP so far. Chriz Janz of Ciena is now chair of the information model within ONF (Intent NBI) and will likely get involved later. However for the OpenSourceSDN project itself it is Inocybe with HP. So the exhaustive list would be Inocybe Technologies, HP, Ciena (Dave L? your input here on the politics is more than welcome) might be hard to get approval.</p>
+
+<p><strong>Are there any licensing details we should include?</strong>
+Boulder is dual-licensed under both Apache Software License and Eclipse Public License so that it can be leveraged in other controller projects.</p>
+
+<p>Boulder was demoed at the ODL Summit. Was there any feedback following the demo that we should reference in the release?
+Boulder was demoed both at ONS and ODL Summit. However it is not yet officially released (hoping to release it around SDN World Congress time frame) . So people have expressed enough interest to pursue this a little further. Moreover, yea many application developers came to ask when it would be ready for them to leverage this for their applications.</p>
 
 <pre><code>$ cd your_repo_root/repo_name
 $ git fetch origin
